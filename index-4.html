@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Galactic Card Rush</title>
+<style>
+:root{--y:#ffd54a;--bg:#04060f;--panel:rgba(14,18,38,.82);--line:rgba(255,213,74,.25);--tx:#e8ecff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}html{color-scheme:dark}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 20% 10%,#1b1450 0,transparent 50%),radial-gradient(ellipse at 85% 80%,#4a0f2e 0,transparent 45%),radial-gradient(ellipse at 60% 40%,#0a2a4a 0,transparent 55%),var(--bg);color:var(--tx);font-family:'Trebuchet MS',Verdana,sans-serif;overflow-x:hidden}
+#bg,#fx{position:fixed;inset:0;pointer-events:none}#bg{z-index:0}#fx{z-index:80}
+.planet{position:fixed;right:-90px;top:70px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#8c93a8,#3a3f55 55%,#10131f 80%);box-shadow:0 0 80px rgba(120,150,255,.25);opacity:.35;z-index:0;pointer-events:none}
+.planet:after{content:"";position:absolute;left:62%;top:28%;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#222,#555);box-shadow:inset 0 0 12px #000}
+.wrap{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:14px}
+h1{margin:6px 0 2px;text-align:center;font-size:clamp(26px,6vw,52px);letter-spacing:.14em;text-transform:uppercase;background:linear-gradient(#ffe98a,#e0a400);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(255,200,40,.45))}
+.sub{text-align:center;opacity:.7;letter-spacing:.3em;font-size:11px;text-transform:uppercase;margin-bottom:12px}
+.hud{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px}
+.pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:700;backdrop-filter:blur(6px)}
+.tabs{display:flex;gap:8px;justify-content:center;margin-bottom:14px}
+button{font:inherit;cursor:pointer;color:var(--tx)}
+.tab{background:var(--panel);border:1px solid var(--line);padding:9px 18px;border-radius:10px;font-weight:700}
+.tab.on{background:linear-gradient(#ffd54a,#d99a00);color:#1a1200}
+.btn{background:linear-gradient(#ffd54a,#d99a00);color:#1a1200;border:0;border-radius:10px;padding:10px 16px;font-weight:800;box-shadow:0 0 14px rgba(255,200,40,.35)}
+.btn:disabled{filter:grayscale(1);opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn.alt{background:rgba(255,255,255,.1);color:var(--tx);box-shadow:none;border:1px solid var(--line)}
+.packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.pack{background:var(--panel);border:1px solid var(--pc);border-radius:16px;padding:16px;text-align:center;box-shadow:0 0 22px color-mix(in srgb,var(--pc) 35%,transparent);backdrop-filter:blur(6px)}
+.pack .em{font-size:64px;filter:drop-shadow(0 0 14px var(--pc));animation:fl 3s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-6px)}}
+.pack h3{margin:6px 0;color:var(--pc);letter-spacing:.08em}
+.pack details{font-size:12px;text-align:left;margin:8px 0;opacity:.85}.pack summary{cursor:pointer;text-align:center}
+.multi{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 12px}
+.multi button{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--panel);font-weight:800}
+.multi button.on{background:var(--y);color:#111}.multi button.lock{opacity:.3;cursor:not-allowed}
+.card{--c:#999;--h:0;position:relative;width:128px;height:182px;border-radius:12px;padding:8px;text-align:center;background:linear-gradient(160deg,color-mix(in srgb,var(--c) 40%,#0b0e1c),#0b0e1c 80%);border:2px solid var(--c);box-shadow:0 0 14px color-mix(in srgb,var(--c) 55%,transparent);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;user-select:none}
+.card .ic{font-size:54px;line-height:1.1;margin-top:10px;filter:drop-shadow(0 0 10px var(--c));position:relative}
+.card .ic:before{content:"";position:absolute;inset:-14px;z-index:-1;background:radial-gradient(circle,hsl(var(--h) 90% 60%/.55),transparent 65%)}
+.card .nm{font-weight:800;font-size:13px;line-height:1.1}.card .rt{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--c);font-weight:800}
+.card .vl{font-size:11px;opacity:.85}
+.card.sh:after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);background-size:250% 100%;animation:sh 2s linear infinite;mix-blend-mode:overlay;pointer-events:none}
+@keyframes sh{from{background-position:150% 0}to{background-position:-100% 0}}
+.tag{position:absolute;top:4px;left:4px;font-size:10px;font-weight:900;background:#fff;color:#111;border-radius:6px;padding:1px 5px}
+.gem{position:absolute;top:2px;right:4px;font-size:18px;animation:fl 1.4s infinite}
+.art svg{width:78px;height:78px;display:block;margin:auto;filter:drop-shadow(0 0 7px rgba(0,0,0,.7))}.cine .art svg{width:160px;height:160px}
+.cnt{position:absolute;bottom:4px;right:6px;font-size:11px;font-weight:800;background:#000a;border-radius:6px;padding:0 5px}
+.r5{animation:pg 1.6s infinite}.r6{animation:pd 1.2s infinite}
+@keyframes pg{50%{box-shadow:0 0 28px var(--c),0 0 50px var(--c)}}
+@keyframes pd{50%{box-shadow:0 0 40px #fff,0 0 70px var(--c)}}
+.r7{border-color:transparent;background:linear-gradient(#0a0a14,#0a0a14) padding-box,conic-gradient(from 0deg,red,yellow,lime,cyan,blue,magenta,red) border-box;animation:rb 3s linear infinite}
+@keyframes rb{to{filter:hue-rotate(360deg)}}
+.lockd{filter:brightness(.22) grayscale(1);box-shadow:none}.lockd .ic{filter:blur(2px)}
+.sec{margin:0 0 20px}.sec h3{margin:6px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+.cwrap{display:flex;flex-direction:column;gap:4px;align-items:center}.cwrap .btn{padding:4px 8px;font-size:11px;border-radius:7px}
+.shop{display:grid;gap:12px;max-width:640px;margin:auto}
+.up{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.bar{height:8px;background:#fff2;border-radius:6px;overflow:hidden;margin-top:6px;width:200px;max-width:100%}.bar i{display:block;height:100%;background:var(--y)}
+#ov{position:fixed;inset:0;z-index:70;background:rgba(2,3,10,.88);display:none;overflow:auto;padding:20px;text-align:center}
+#ov.show{display:block}
+.grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:20px auto;max-width:900px}
+.grid .card{opacity:0;animation:pop .6s forwards}
+@keyframes pop{from{opacity:0;transform:rotateY(90deg) scale(.6)}to{opacity:1;transform:none}}
+.cine{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;position:relative}
+.cine .card{width:230px;height:322px;transform:scale(0);animation:big 1s .9s forwards cubic-bezier(.2,1.6,.4,1)}
+.cine .card .ic{font-size:104px}.cine .card .nm{font-size:22px}.cine .card .rt{font-size:14px}.cine .card .vl{font-size:15px}
+@keyframes big{to{transform:scale(1)}}
+.banner{font-size:clamp(28px,7vw,64px);font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:var(--c);text-shadow:0 0 30px var(--c),0 0 60px var(--c);opacity:0;animation:bn 1s .3s forwards}
+@keyframes bn{from{opacity:0;transform:scale(2.6);letter-spacing:.8em}to{opacity:1;transform:none}}
+.ring{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px;border-radius:50%;border:4px solid var(--c);opacity:0;animation:rg 1.8s .8s ease-out infinite}
+.ring.b{animation-delay:1.3s}
+@keyframes rg{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(40)}}
+.flash{position:fixed;inset:0;background:#fff;z-index:90;pointer-events:none;animation:fo 1s forwards}
+@keyframes fo{to{opacity:0}}
+.shake{animation:sk .5s 4}
+@keyframes sk{25%{transform:translate(-8px,5px)}50%{transform:translate(7px,-6px)}75%{transform:translate(-5px,-4px)}}
+#modal{position:fixed;inset:0;z-index:95;background:#000c;display:none;align-items:center;justify-content:center;padding:16px}
+#modal.show{display:flex}
+.mbox{background:#0c1130;border:2px solid var(--y);border-radius:18px;padding:22px;max-width:440px;text-align:center;box-shadow:0 0 40px rgba(255,200,40,.4)}
+.mbox .row{justify-content:center;margin-top:14px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;border:1px solid var(--y);padding:10px 16px;border-radius:10px;z-index:99;opacity:0;transition:.3s;pointer-events:none}
+#toast.on{opacity:1}
+#adm{position:fixed;left:10px;bottom:10px;z-index:60;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);opacity:.3;font-size:15px}#adm:hover{opacity:1}
+.tabs{flex-wrap:wrap}#hu{cursor:pointer}#login{position:fixed;inset:0;z-index:100;background:rgba(2,3,10,.97);display:none;align-items:center;justify-content:center;padding:16px}#login.show{display:flex}#login .mbox input{display:block;width:100%;margin:8px 0}
+.mbox select,.mbox input[type=password],.mbox input[type=text]{background:#0a0e24;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit;max-width:100%}.mbox h4{margin:14px 0 4px;color:var(--y)}
+.ring{pointer-events:none}.cine .btn{position:relative;z-index:6}
+.art{display:block}.art svg{width:58px;height:87px}.cine .art svg{width:130px;height:195px}.card .ic{margin-top:4px}
+.lb{display:grid;grid-template-columns:44px 1fr auto;gap:8px;padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.08);align-items:center}.lb.me{background:rgba(255,213,74,.18);border-radius:8px;font-weight:800;border-color:transparent}.lb small{opacity:.6}
+.hint{opacity:.7;font-size:12px;text-align:center;margin:8px 0 16px}
+</style></head>
+<body>
+<canvas id="bg"></canvas><canvas id="fx"></canvas><div class="planet"></div>
+<div class="wrap" id="app">
+<h1>Galactic Card Rush</h1><div class="sub">A long time ago, in a pack far, far away…</div>
+<div class="hud"><div class="pill" id="hc"></div><div class="pill" id="hg"></div><div class="pill" id="hl"></div><div class="pill" id="hs"></div><div class="pill" id="hu" onclick="logout()"></div></div>
+<div class="tabs"><button class="tab on" data-t="packs">📦 Packs</button><button class="tab" data-t="coll">🗂️ Collection</button><button class="tab" data-t="shop">💎 Gem Shop</button><button class="tab" data-t="board">🏆 Leaderboard</button><button class="tab" data-t="trade">🔁 Trade</button></div>
+<div id="main"></div>
+</div>
+<div id="login"></div><div id="ov"></div><div id="modal"></div><div id="toast"></div><button id="adm" onclick="admOpen()" title="Admin">🔒</button>
+<script>
+const R=[{n:'Common',c:'#9aa4b2',v:5},{n:'Uncommon',c:'#4ade80',v:15},{n:'Rare',c:'#38bdf8',v:60},{n:'Epic',c:'#a855f7',v:250},{n:'Legendary',c:'#fbbf24',v:1200},{n:'Godly',c:'#fb4b6b',v:6000},{n:'Divine',c:'#fff4c2',v:30000},{n:'Secret',c:'#ff66ff',v:150000}];
+const RAW=[[0,'Stormtrooper','🪖'],[0,'Jawa','🟤'],[0,'Battle Droid','🤖'],[0,'Tusken Raider','🏜️'],[0,'Womp Rat','🐀'],
+[1,'Rebel Trooper','🔫'],[1,'Ewok','🐻'],[1,'Gungan','🐸'],[1,'TIE Pilot','🧑‍🚀'],[1,'Tauntaun','🦌'],
+[2,'C-3PO','🥇'],[2,'Lando Calrissian','🧥'],[2,'Boba Fett','🎯'],[2,'Millennium Falcon','🚀'],
+[3,'R2-D2','🔵'],[3,'Chewbacca','🦁'],[3,'Princess Leia','👑'],[3,'X-Wing Squadron','✈️'],
+[4,'Han Solo','😎'],[4,'Mace Windu','🟣'],[4,'Darth Maul','😈'],[4,'Grogu','👶'],
+[5,'Obi-Wan Kenobi','🌌'],[5,'Luke Skywalker','⚔️'],[5,'Kylo Ren','🔥'],
+[6,'Darth Vader','🌑'],[6,'Master Yoda','🧙'],[6,'Emperor Palpatine','⚡'],
+[7,'The Death Star','🪐'],[7,'The Force','🌀'],
+[0,'Clone Trooper','🔰'],[0,'Gamorrean Guard','🐗'],[0,'Mouse Droid','🐁'],[0,'Probe Droid','🛰️'],[0,'Sandcrawler','🚜'],[0,'Bantha','🐘'],[0,'Rodian Thug','👽'],
+[1,'Snowtrooper','❄️'],[1,'Podracer Pilot','🏎️'],[1,'Mon Calamari Officer','🐟'],[1,'Wampa','🧊'],[1,'Twi\'lek Pilot','🛩️'],[1,'Rebel Medic','🩹'],
+[2,'Jyn Erso','🗝️'],[2,'Cassian Andor','🕵️'],[2,'Greedo','🟢'],[2,'AT-ST Walker','🦿'],
+[3,'Admiral Ackbar','🐠'],[3,'Jabba the Hutt','🐌'],[3,'Ahsoka Tano','🌙'],
+[4,'Din Djarin','🛡️'],[4,'General Grievous','🦾'],
+[5,'Anakin Skywalker','🌋'],[5,'Rey','🌟'],
+[6,'Rebel Alliance Fleet','🌠'],
+[2,'Plo Koon','🥽'],[2,'Kit Fisto','🐙'],[2,'Aayla Secura','💙'],[2,'Shaak Ti','🌿'],[2,'Jedi Temple Guard','🔆'],[2,'Asajj Ventress','🗡️'],[2,'Bossk','🦎'],[2,'Dengar','💣'],
+[3,'Qui-Gon Jinn','🍃'],[3,'Count Dooku','🦅'],[3,'Ki-Adi-Mundi','🧠'],[3,'Luminara Unduli','🌸'],[3,'Savage Opress','🩸'],[3,'Cal Kestis','🔦'],[3,'Grand Inquisitor','🔴'],
+[4,'Darth Bane','📜'],[4,'Ezra Bridger','🔮'],[4,'Kanan Jarrus','👁️'],
+[5,'Darth Plagueis','🧬'],[5,'Ben Solo','🗡️'],
+[6,'Darth Revan','🎭'],[6,'Force Ghost Obi-Wan','👻'],
+[7,'Chosen One Anakin','⭐'],[7,'Force Ghost Yoda','💚'],[7,'Darth Sidious Unleashed','🌩️'],[7,'Ben Solo Redeemed','🕊️'],
+[0,'Dewback','🦎'],[0,'Pit Droid','🔧'],[0,'Gonk Droid','🔋'],[0,'Moisture Farmer','🌾'],[0,'Cantina Patron','🍺'],[0,'Super Battle Droid','🦾'],[0,'Geonosian Drone','🪲'],[0,'Scout Trooper','🏍️'],[0,'Porg','🐦'],[0,'Bith Musician','🎷'],[0,'Sullustan Mechanic','🔩'],
+[1,'Imperial Officer','🎖️'],[1,'Rebel Pilot','🧑‍✈️']];
+const CARDS=RAW.map((x,i)=>({id:i,r:x[0],n:x[1],e:x[2],h:(i*47)%360}));
+const HP='M50 8C30 8 22 24 22 44c0 14 4 22 8 30l8 14h24l8-14c4-8 8-16 8-30C78 24 70 8 50 8z';
+const sv=b=>`<svg viewBox='0 0 100 100'>${b}</svg>`;
+const ART={
+'Stormtrooper':sv(`<path d='${HP}' fill='#f6f6f6' stroke='#222' stroke-width='3'/><path d='M27 40c3-7 15-9 19-2l-2 11c-7 2-15 0-17-9zM73 40c-3-7-15-9-19-2l2 11c7 2 15 0 17-9z' fill='#111'/><path d='M44 54l6 9 6-9z' fill='#333'/><path d='M38 72h24M42 79h16M46 85h8' stroke='#222' stroke-width='2.5'/>`),
+'Clone Trooper':sv(`<path d='${HP}' fill='#f2f4f8' stroke='#222' stroke-width='3'/><path d='M27 38h46v10H56v28H44V48H27z' fill='#10141c'/><rect x='46' y='9' width='8' height='24' fill='#3b82f6'/>`),
+'Din Djarin':sv(`<path d='${HP}' fill='#aab4c2' stroke='#2b3340' stroke-width='3'/><path d='M26 38h48v10H56v28H44V48H26z' fill='#0e1218'/><path d='M50 10v24' stroke='#6b7686' stroke-width='3'/><ellipse cx='36' cy='26' rx='8' ry='12' fill='#fff' opacity='.35'/>`),
+'Boba Fett':sv(`<path d='${HP}' fill='#587a47' stroke='#1f2b18' stroke-width='3'/><path d='M22 44c0-9 2-15 6-21l9 4-5 22z' fill='#b91c1c'/><path d='M27 38h46v9H56v10H44V47H27z' fill='#0c1008'/><path d='M60 20l8 6' stroke='#2b3a22' stroke-width='3'/>`),
+'Darth Vader':sv(`<path d='M50 6C28 6 20 24 22 46l6 22 10 20h24l10-20 6-22C80 24 72 6 50 6z' fill='#14161c' stroke='#666' stroke-width='2'/><path d='M27 42l17 4v9l-15-3zM73 42l-17 4v9l15-3z' fill='#2a2d36' stroke='#888'/><path d='M46 58h8l-4 10z' fill='#444'/><rect x='38' y='74' width='24' height='11' rx='2' fill='#222' stroke='#777'/><circle cx='45' cy='80' r='1.6' fill='#f33'/><circle cx='55' cy='80' r='1.6' fill='#3f3'/>`),
+'Master Yoda':sv(`<path d='M4 52L30 40 32 66z' fill='#8cc063' stroke='#2d4a1a' stroke-width='2'/><path d='M96 52L70 40 68 66z' fill='#8cc063' stroke='#2d4a1a' stroke-width='2'/><ellipse cx='50' cy='56' rx='25' ry='28' fill='#9fd37a' stroke='#2d4a1a' stroke-width='2'/><circle cx='39' cy='52' r='6' fill='#fff'/><circle cx='61' cy='52' r='6' fill='#fff'/><circle cx='39' cy='53' r='3' fill='#222'/><circle cx='61' cy='53' r='3' fill='#222'/><path d='M30 44q9-6 18-1M52 43q9-5 18 1' stroke='#2d4a1a' stroke-width='2.5' fill='none'/><path d='M40 72q10 6 20 0' stroke='#2d4a1a' stroke-width='2' fill='none'/><path d='M44 30q6-8 12 0' stroke='#eee' stroke-width='3' fill='none'/>`),
+'Grogu':sv(`<path d='M2 62L28 46 32 72z' fill='#a5d27e' stroke='#2d4a1a' stroke-width='2'/><path d='M98 62L72 46 68 72z' fill='#a5d27e' stroke='#2d4a1a' stroke-width='2'/><path d='M26 86q24-14 48 0v12H26z' fill='#8b6b4a'/><ellipse cx='50' cy='58' rx='22' ry='24' fill='#b4dd8c' stroke='#2d4a1a' stroke-width='2'/><circle cx='40' cy='56' r='7' fill='#1a1a1a'/><circle cx='60' cy='56' r='7' fill='#1a1a1a'/><circle cx='38' cy='54' r='2' fill='#fff'/><circle cx='58' cy='54' r='2' fill='#fff'/><path d='M45 72q5 3 10 0' stroke='#2d4a1a' stroke-width='2' fill='none'/>`),
+'R2-D2':sv(`<rect x='14' y='52' width='9' height='40' rx='3' fill='#cfd6e4' stroke='#444' stroke-width='2'/><rect x='77' y='52' width='9' height='40' rx='3' fill='#cfd6e4' stroke='#444' stroke-width='2'/><rect x='24' y='46' width='52' height='44' rx='4' fill='#e9eef7' stroke='#444' stroke-width='2'/><path d='M24 46a26 26 0 0152 0z' fill='#e9eef7' stroke='#444' stroke-width='2'/><circle cx='50' cy='32' r='6' fill='#111' stroke='#2563eb' stroke-width='3'/><path d='M26 34h12M62 34h12' stroke='#2563eb' stroke-width='6'/><rect x='32' y='54' width='14' height='10' fill='#2563eb'/><rect x='54' y='54' width='14' height='10' fill='#2563eb'/><rect x='38' y='72' width='24' height='8' fill='#3b82f6'/>`),
+'C-3PO':sv(`<ellipse cx='50' cy='48' rx='26' ry='34' fill='#e8b833' stroke='#7a5a00' stroke-width='3'/><circle cx='38' cy='42' r='8' fill='#fff3a0' stroke='#6b4c00' stroke-width='3'/><circle cx='62' cy='42' r='8' fill='#fff3a0' stroke='#6b4c00' stroke-width='3'/><path d='M44 58h12v6H44z' fill='#a37b00'/><path d='M38 74h24' stroke='#6b4c00' stroke-width='3'/><path d='M50 14v10' stroke='#a37b00' stroke-width='3'/>`),
+'Battle Droid':sv(`<path d='M32 14c10-8 26-8 36 0l-5 40c-4 8-22 8-26 0z' fill='#d9c28a' stroke='#6b5a2c' stroke-width='3'/><path d='M36 36l10 4M64 36l-10 4' stroke='#222' stroke-width='5'/><path d='M44 56h12v26H44z' fill='#b9a46c' stroke='#6b5a2c' stroke-width='2'/><path d='M36 86h28' stroke='#6b5a2c' stroke-width='5'/>`)
+};
+const SK=`stroke='#111' stroke-width='1.6'`,sv2=b=>`<svg viewBox='0 0 60 90'>${b}</svg>`;
+function fig(t,s,o,p,h,x=''){
+const X=' '+x+' ',has=c=>X.includes(' '+c+' '),f=c=>{const m=X.match(new RegExp(' '+c+'(#[0-9a-fA-F]{3,6})'));return m?m[1]:null};
+const r=(a,b,w,hh,rx,fl)=>`<rect x='${a}' y='${b}' width='${w}' height='${hh}' rx='${rx}' fill='${fl}' ${SK}/>`,E=f('E')||'#111';
+let g='',hd='';
+if(has('G'))g+=`<circle cx='30' cy='46' r='36' fill='#bfe0ff' opacity='.3'/>`;
+const cp=f('c');if(cp)g+=`<path d='M15 40L6 80h48L45 40z' fill='${cp}' ${SK}/>`;
+g+=r(20,62,9,17,3,p)+r(31,62,9,17,3,p)+r(18,77,11,6,3,'#2a2a2a')+r(31,77,11,6,3,'#2a2a2a')+r(17,38,26,27,5,o)+r(9,40,8,21,4,o)+r(43,40,8,21,4,o);
+if(f('P'))g+=`<circle cx='13' cy='41' r='6' fill='${f('P')}' ${SK}/><circle cx='47' cy='41' r='6' fill='${f('P')}' ${SK}/>`;
+if(has('y'))g+=`<path d='M18 40h8l4 17-7 5zM42 40h-8l-4 17 7 5z' fill='#222' stroke='#111' stroke-width='1.2'/>`;
+if(has('C'))g+=`<rect x='24' y='46' width='12' height='9' rx='1' fill='#222' stroke='#888' stroke-width='.8'/><circle cx='27' cy='50' r='1.2' fill='#f33'/><circle cx='33' cy='50' r='1.2' fill='#3f3'/>`;
+if(has('v'))g+=`<path d='M18 40L42 62' stroke='#4a2f14' stroke-width='4'/>`;
+if(has('X'))g+=`<path d='M27 44h6v12h-6zM24 48h12v4H24z' fill='#dc2626'/>`;
+g+=`<circle cx='13' cy='62' r='3.6' fill='${s}' ${SK}/><circle cx='47' cy='62' r='3.6' fill='${s}' ${SK}/>`;
+const L=f('L');if(L)g+=`<rect x='46' y='22' width='3.4' height='38' rx='1.7' fill='${L}' stroke='#fff' stroke-width='.9'/><rect x='45.6' y='58' width='4.2' height='7' fill='#888' ${SK}/>`;
+if(has('Z'))g+=`<path d='M50 58l-5-9 6-1-6-10M10 58l5-9-6-1 6-10' stroke='#bfe0ff' stroke-width='2' fill='none'/>`;
+const EY=`<circle cx='24.5' cy='24' r='1.9' fill='${E}'/><circle cx='35.5' cy='24' r='1.9' fill='${E}'/>`,MO=`<path d='M27 30q3 2 6 0' fill='none' stroke='#111' stroke-width='1.3'/>`;
+if(t=='H'){if(has('g'))hd+=`<rect x='14' y='16' width='32' height='30' rx='9' fill='${h}' ${SK}/>`;hd+=`<circle cx='30' cy='23' r='14' fill='${s}' ${SK}/>`;if(!has('b'))hd+=`<path d='M16 23C14 8 46 8 44 23c-3-7-9-9-14-9s-11 2-14 9z' fill='${h}' ${SK}/>`;if(has('u'))hd+=`<circle cx='14' cy='16' r='5' fill='${h}' ${SK}/><circle cx='46' cy='16' r='5' fill='${h}' ${SK}/>`;hd+=EY+MO;if(has('d'))hd+=`<path d='M19 28q11 16 22 0q-4 3-11 3t-11-3z' fill='${h}' ${SK}/>`}
+else if(t=='T')hd=`<circle cx='30' cy='22' r='15' fill='${h}' ${SK}/>`+(f('z')?`<path d='M15 22a15 15 0 013-9l5 3-3 13z' fill='${f('z')}'/>`:'')+`<path d='M18 17h24v7h-9v11h-6V24h-9z' fill='#0d1117'/>`;
+else if(t=='S')hd=`<path d='M15 24C14 7 46 7 45 24c0 10-5 16-15 16S15 34 15 24z' fill='${h}' ${SK}/><path d='M18 20q6-3 10 1l-1 6q-7 1-9-7zM42 20q-6-3-10 1l1 6q7 1 9-7z' fill='${E}'/><path d='M27 32h6l-3 4z' fill='#555'/><path d='M24 37h12' stroke='#222' stroke-width='1.3'/>`;
+else if(t=='V')hd=`<path d='M14 24C13 6 47 6 46 24l-3 14H17z' fill='#15171d' ${SK}/><path d='M18 21l10 3v4l-9-2zM42 21l-10 3v4l9-2z' fill='#3a3d46'/><rect x='23' y='31' width='14' height='7' rx='1' fill='#222' stroke='#888' stroke-width='.8'/>`;
+else if(t=='A'){if(has('q'))hd+=`<path d='M16 26q-9 14-3 28l5-2q-4-13 2-24z' fill='${s}' ${SK}/><path d='M44 26q9 14 3 28l-5-2q4-13-2-24z' fill='${s}' ${SK}/>`;if(has('e'))hd+=`<path d='M16 20L2 15l5 14zM44 20l14-5-5 14z' fill='${s}' ${SK}/>`;if(has('o'))hd+=`<path d='M20 11L16 0l8 8zM40 11l4-11-8 8z' fill='${h}' ${SK}/>`;hd+=`<ellipse cx='30' cy='23' rx='15' ry='14' fill='${s}' ${SK}/><ellipse cx='23.5' cy='22' rx='4' ry='5' fill='${E}'/><ellipse cx='36.5' cy='22' rx='4' ry='5' fill='${E}'/>`+MO;if(has('t'))hd+=`<path d='M24 31l-2 7 4-3zM36 31l2 7-4-3z' fill='#f5f0d0' stroke='#111' stroke-width='1'/>`;if(has('s'))hd+=`<ellipse cx='30' cy='30' rx='6' ry='4.5' fill='${s}' ${SK}/><circle cx='28' cy='29' r='.9' fill='#111'/><circle cx='32' cy='29' r='.9' fill='#111'/>`}
+else if(t=='D')hd=has('p')?`<ellipse cx='30' cy='22' rx='13' ry='15' fill='${h}' ${SK}/><circle cx='24' cy='20' r='4.5' fill='#fff3a0' ${SK}/><circle cx='36' cy='20' r='4.5' fill='#fff3a0' ${SK}/><path d='M24 32h12' stroke='#111' stroke-width='2'/>`:`<path d='M16 32V22a14 14 0 0128 0v10z' fill='${h}' ${SK}/><circle cx='30' cy='23' r='5' fill='#111' stroke='#2563eb' stroke-width='2'/>`;
+else if(t=='R')hd=`<path d='M13 42C9 2 51 2 47 42z' fill='${h}' ${SK}/><ellipse cx='30' cy='26' rx='11' ry='12' fill='${s}'/>`+EY.replace(/cy='24'/g,`cy='26'`)+(s=='#111'?'':MO.replace('M27 30','M27 32'));
+else if(t=='U')hd=(has('w')?`<path d='M13 22q-5 16 4 24l1-14zM47 22q5 16-4 24l-1-14z' fill='${h}' ${SK}/>`:'')+(has('n')?'':`<circle cx='17' cy='12' r='5' fill='${h}' ${SK}/><circle cx='43' cy='12' r='5' fill='${h}' ${SK}/>`)+(has('o')?`<path d='M18 12L13 0l9 8zM42 12l5-12-9 8z' fill='#e8e4cc' ${SK}/>`:'')+`<circle cx='30' cy='23' r='15' fill='${h}' ${SK}/><ellipse cx='30' cy='27' rx='9' ry='8' fill='${s}'/>`+EY+`<ellipse cx='30' cy='28' rx='3' ry='2' fill='#222'/>`;
+return sv2(has('j')?`<g transform='translate(7.5 24) scale(.75)'>${g}${hd}</g>`:g+hd)}
+const qd=(c,fl)=>sv2(`<g stroke='#111' stroke-width='1.6' fill='${c}'><rect x='9' y='56' width='7' height='22' rx='3'/><rect x='18' y='58' width='7' height='20' rx='3'/><rect x='36' y='58' width='7' height='20' rx='3'/><rect x='45' y='56' width='7' height='22' rx='3'/><ellipse cx='30' cy='50' rx='25' ry='15'/><circle cx='50' cy='32' r='10'/><path d='M6 46q-8-2-6-14' fill='none'/></g><circle cx='53' cy='30' r='2' fill='#111'/>${fl=='B'?`<path d='M44 24q-12-10-4-20M56 24q10-10 4-20' stroke='#eee' stroke-width='4' fill='none'/>`:''}${fl=='T'?`<path d='M46 24l-4-12M54 24l4-12' stroke='#e5e0c8' stroke-width='3'/>`:''}${fl=='W'?`<circle cx='44' cy='24' r='5' fill='${c}' stroke='#111'/>`:''}`);
+const LS='#f1c9a5',TN='#d9a066',DK='#8d5a3b',PL='#d8d0c8',GH='#cfe6ff',TAN='#c9a46a';
+Object.assign(ART,{
+'Stormtrooper':fig('S','#fff','#f6f6f6','#222','#f6f6f6'),
+'Clone Trooper':fig('T','#fff','#f4f4f8','#e5e7eb','#f2f4f8','z#3b82f6'),
+'Battle Droid':fig('S','#d9c28a','#d9c28a','#b9a46c','#d9c28a'),
+'Tusken Raider':fig('T','#8a6a4a','#c8a878','#7a5a3a','#d8c090'),
+'Jawa':fig('R','#111','#6b4f35','#5a432c','#5a432c','E#ffd23f j'),
+'Gamorrean Guard':fig('A','#6b8f4a','#7a5a3a','#5a4a3a','#6b8f4a','o'),
+'Rodian Thug':fig('A','#5fa05a','#55524a','#333','#5fa05a'),
+'Womp Rat':qd('#8a7a6a','W'),'Bantha':qd('#8a6a4a','B'),'Tauntaun':qd('#d8cfae','T'),
+'Mouse Droid':sv2(`<rect x='12' y='50' width='36' height='20' rx='7' fill='#555' ${SK}/><circle cx='20' cy='72' r='6' fill='#222'/><circle cx='40' cy='72' r='6' fill='#222'/><rect x='24' y='54' width='12' height='6' fill='#9ca3af'/>`),
+'Probe Droid':sv2(`<path d='M30 50L12 82M30 50l18 32M30 50V84' stroke='#333' stroke-width='3'/><circle cx='30' cy='40' r='15' fill='#2a2d36' ${SK}/><circle cx='30' cy='38' r='5' fill='#ef4444'/><path d='M30 25V12' stroke='#333' stroke-width='3'/>`),
+'Sandcrawler':sv2(`<rect x='4' y='36' width='52' height='30' rx='4' fill='#a5673f' ${SK}/><path d='M10 36l8-14h24l8 14z' fill='#8a5532' ${SK}/><rect x='3' y='64' width='54' height='15' rx='7' fill='#3b3b3b' ${SK}/><rect x='22' y='42' width='16' height='9' fill='#222'/>`),
+'Rebel Trooper':fig('H',LS,'#8a7a5a','#4a5a3a','#5a4020'),
+'Ewok':fig('U','#c8935a','#8a5a2a','#8a5a2a','#9a6a3a','j'),
+'Gungan':fig('A',TN,'#c9a05a','#8a6a3a',TN,'e'),
+'TIE Pilot':fig('S','#ddd','#2a2d33','#2a2d33','#2a2d33','E#8b93a3'),
+'Snowtrooper':fig('S','#fff','#eceff4','#8b93a3','#f6f6f6'),
+'Podracer Pilot':fig('T',LS,'#d97706','#7c3a0e','#c0c4cc'),
+'Mon Calamari Officer':fig('A','#e07a5f','#3b5b8a','#2a3a55','#e07a5f','E#fff'),
+'Wampa':fig('U','#d6dde6','#f2f5f8','#f2f5f8','#f2f5f8'),
+[`Twi'lek Pilot`]:fig('A','#e58a3c','#d97706','#7c3a0e','#e58a3c','q'),
+'Rebel Medic':fig('H',LS,'#eceff4','#8b93a3','#7a4a28','X'),
+'C-3PO':fig('D','#e8b833','#e8b833','#c99a1a','#e8b833','p'),
+'Lando Calrissian':fig('H',DK,'#e5e7eb','#2a2a2a','#222','c#2563eb d'),
+'Boba Fett':fig('T','#999','#6b8f5a','#4a5a52','#587a47','z#b91c1c'),
+'Millennium Falcon':sv2(`<path d='M20 34L15 6h9l5 28zM40 34l5-28h-9l-5 28z' fill='#b5b9c2' ${SK}/><ellipse cx='30' cy='54' rx='27' ry='26' fill='#c9ccd3' ${SK}/><circle cx='28' cy='56' r='9' fill='#9aa0aa' ${SK}/><rect x='44' y='36' width='7' height='24' rx='3' fill='#8f95a1' ${SK}/><path d='M10 54h10M40 66h8' stroke='#777' stroke-width='2'/>`),
+'Plo Koon':fig('A','#c08a5a','#a8865a','#6b5a3a','#c08a5a','L#4af'),
+'Kit Fisto':fig('A','#5fa05a','#a8865a','#6b5a3a','#5fa05a','q L#4ade80'),
+'Aayla Secura':fig('A','#5aa7e8','#a8865a','#6b5a3a','#5aa7e8','q L#4af'),
+'Shaak Ti':fig('A','#e8e0d8','#a8865a','#6b5a3a','#e8e0d8','q L#4ade80'),
+'Jedi Temple Guard':fig('T',LS,'#caa84b','#6b5a2a','#d8c470','L#fde047'),
+'Asajj Ventress':fig('H',PL,'#1f1f2a','#1f1f2a',PL,'b L#ef4444'),
+'Bossk':fig('A','#8a9a5a','#c5ae7a','#6a5a3a','#8a9a5a','E#ef4444'),
+'Dengar':fig('H',TN,'#7a6a4a','#4a4a3a','#6b5a4a','d'),
+'Jyn Erso':fig('H',LS,'#4a4a4a','#2a2a2a','#5a3a20','g'),
+'Cassian Andor':fig('H',TN,'#6b6040','#333','#3a2a1a'),
+'Greedo':fig('A','#7fb86a','#7a5a3a','#6b4a2a','#7fb86a','o'),
+'AT-ST Walker':sv2(`<path d='M22 34l-10 26 5 22M38 34l10 26-5 22' stroke='#4b5563' stroke-width='7' fill='none' stroke-linecap='round'/><rect x='14' y='8' width='32' height='28' rx='6' fill='#6b7280' ${SK}/><rect x='20' y='15' width='20' height='8' rx='2' fill='#111'/><rect x='8' y='28' width='5' height='14' fill='#374151' ${SK}/><rect x='47' y='28' width='5' height='14' fill='#374151' ${SK}/>`),
+'R2-D2':sv2(`<rect x='8' y='46' width='8' height='36' rx='3' fill='#cfd6e4' ${SK}/><rect x='44' y='46' width='8' height='36' rx='3' fill='#cfd6e4' ${SK}/><rect x='14' y='40' width='32' height='42' rx='4' fill='#e9eef7' ${SK}/><path d='M14 40a16 16 0 0132 0z' fill='#e9eef7' ${SK}/><circle cx='30' cy='30' r='4' fill='#111' stroke='#2563eb' stroke-width='2'/><rect x='19' y='46' width='9' height='8' fill='#2563eb'/><rect x='32' y='46' width='9' height='8' fill='#2563eb'/><rect x='22' y='62' width='16' height='6' fill='#3b82f6'/>`),
+'Chewbacca':fig('U','#b98a5a','#7a4a24','#7a4a24','#7a4a24','v'),
+'Princess Leia':fig('H',LS,'#f4f4f4','#f4f4f4','#5a3a20','g u'),
+'X-Wing Squadron':sv2(`<path d='M30 50L5 20M30 50L55 20M30 58L5 86M30 58L55 86' stroke='#cfd3da' stroke-width='7' stroke-linecap='round'/><rect x='26' y='4' width='8' height='78' rx='4' fill='#e5e7eb' ${SK}/><circle cx='5' cy='20' r='3' fill='#ef4444'/><circle cx='55' cy='20' r='3' fill='#ef4444'/><rect x='27' y='24' width='6' height='12' rx='3' fill='#38bdf8'/>`),
+'Admiral Ackbar':fig('A','#e07a5f','#e5e7eb','#9ca3af','#e07a5f'),
+'Jabba the Hutt':sv2(`<path d='M4 74q-4-20 14-24h24q18 4 14 24q-26 12-52 0z' fill='#8a8a3a' ${SK}/><path d='M50 72q10 6 8 14' stroke='#8a8a3a' stroke-width='6' fill='none'/><ellipse cx='30' cy='42' rx='19' ry='16' fill='#9a9a4a' ${SK}/><ellipse cx='22' cy='36' rx='5' ry='4' fill='#f5e050' ${SK}/><ellipse cx='38' cy='36' rx='5' ry='4' fill='#f5e050' ${SK}/><path d='M16 48q14 10 28 0' fill='none' stroke='#111' stroke-width='2'/>`),
+'Ahsoka Tano':fig('A','#e07a3c','#2f3a5a','#1f2a44','#e07a3c','q L#4ade80'),
+'Qui-Gon Jinn':fig('H',LS,'#a8865a','#6b5a3a','#8a6a42','d g L#4ade80'),
+'Count Dooku':fig('H',LS,'#1a1a22','#111','#e5e5e5','d c#2a1a1a L#ef4444'),
+'Ki-Adi-Mundi':fig('A','#e8e0d8','#b99a5a','#6b5a2a','#e8e0d8','L#4af'),
+'Luminara Unduli':fig('H','#7fb86a','#8a6a3a','#5a4a2a','#222','g L#4ade80'),
+'Savage Opress':fig('A','#c63a2a','#222','#222','#222','o L#ef4444'),
+'Cal Kestis':fig('H',LS,'#3a4a5a','#2a2a2a','#7a4a28','L#4af'),
+'Grand Inquisitor':fig('H','#cfc7bf','#111','#111','#cfc7bf','b L#ef4444'),
+'Han Solo':fig('H',LS,'#f2f2f2','#1f2937','#6b4a2a'),
+'Mace Windu':fig('H',DK,'#a07a4a','#6b5a2a',DK,'b L#a855f7'),
+'Darth Maul':fig('A','#d62828','#111','#111','#111','o L#ef4444'),
+'Grogu':fig('A','#a5d27e','#8b6b4a','#8b6b4a','#a5d27e','e j'),
+'Din Djarin':fig('T','#999','#3a4a5a','#2f3a4a','#aab4c2','c#6b4a2a'),
+'General Grievous':fig('S','#d9d2bd','#d9d2bd','#bdb59a','#d9d2bd','E#facc15'),
+'Darth Bane':fig('R',PL,'#1a1a1a','#111','#1a1a1a','L#ef4444'),
+'Ezra Bridger':fig('H',LS,'#3a5aa0','#2a3a5a','#2a2a5a','L#4af'),
+'Kanan Jarrus':fig('H',LS,'#6b5a3a','#3a3a3a','#6b3a1a','d g L#4af'),
+'Obi-Wan Kenobi':fig('H',LS,TAN,'#6b5a3a','#8a5a2a','d c#7a5a3a L#4af'),
+'Luke Skywalker':fig('H',LS,'#e8e4d8','#6b5a3a','#d9b25a','L#4ade80'),
+'Kylo Ren':fig('H',LS,'#17171c','#111','#111','c#111 L#ef4444'),
+'Anakin Skywalker':fig('H',LS,'#6b4a2a','#3a2a1a','#6b4a2a','c#3a2a1a L#4af'),
+'Rey':fig('H',LS,'#e6dccb','#8a7a5a','#6b4a2a','L#4af'),
+'Darth Plagueis':fig('H','#c9c0b8','#1a1a22','#111','#c9c0b8','b c#1a1a22'),
+'Ben Solo':fig('H',LS,'#e8e4d8','#3a3a3a','#1a1a1a','L#ef4444'),
+'Darth Vader':fig('V','#fff','#15171d','#15171d','#15171d','c#111 L#ef4444'),
+'Master Yoda':fig('A','#9fd37a','#a07a4a','#7a5a3a','#9fd37a','e j L#4ade80'),
+'Emperor Palpatine':fig('R','#d6cfc4','#111','#111','#1a1a22','Z'),
+'Darth Revan':fig('T','#999','#2a2a30','#222','#3a3d46','c#2a2a2a L#ef4444'),
+'Force Ghost Obi-Wan':fig('H',GH,'#9fc8f5','#7fb0e8','#dbeaff','d c#8ab8ee G'),
+'Rebel Alliance Fleet':sv2(`<path d='M30 6l9 26H21zM13 42l9 26H4zM47 42l9 26H38zM30 58l9 26H21z' fill='#e5e7eb' ${SK}/><circle cx='30' cy='22' r='2.5' fill='#38bdf8'/>`),
+'The Death Star':sv2(`<circle cx='30' cy='46' r='28' fill='#8e949f' ${SK}/><path d='M3 46h54' stroke='#4a4f5a' stroke-width='2.5'/><circle cx='42' cy='32' r='9' fill='#6a707c' ${SK}/><circle cx='42' cy='32' r='3' fill='#7fff7f'/>`),
+'The Force':sv2(`<circle cx='30' cy='46' r='27' fill='#e0e7ff' ${SK}/><path d='M30 19a27 27 0 010 54a13.5 13.5 0 010-27a13.5 13.5 0 000-27z' fill='#1e1b4b'/><circle cx='30' cy='32' r='4' fill='#e0e7ff'/><circle cx='30' cy='60' r='4' fill='#1e1b4b'/>`),
+'Chosen One Anakin':fig('H',GH,'#9fc8f5','#7fb0e8','#dbeaff','c#8ab8ee L#4af G'),
+'Force Ghost Yoda':fig('A',GH,'#9fc8f5','#7fb0e8',GH,'e j G'),
+'Darth Sidious Unleashed':fig('R','#d6cfc4','#111','#111','#1a1a22','Z c#111'),
+'Ben Solo Redeemed':fig('H',LS,'#efe9d8','#cbbf9a','#1a1a1a','L#ffe066 G')
+});
+Object.assign(ART,{
+'Chewbacca':fig('U','#c9a074','#7a4a24','#7a4a24','#6b3f1e','v w n'),
+'Wampa':fig('U','#cfd8e2','#f2f5f8','#f2f5f8','#f2f5f8','o'),
+'Gamorrean Guard':fig('A','#6b8f4a','#7a5a3a','#5a4a3a','#6b8f4a','o t'),
+'Rodian Thug':fig('A','#5fa05a','#55524a','#333','#5fa05a','s'),
+'Greedo':fig('A','#7fb86a','#7a5a3a','#6b4a2a','#7fb86a','s'),
+'Han Solo':fig('H',LS,'#f2f2f2','#1f2937','#6b4a2a','y'),
+'Boba Fett':fig('T','#999','#6b8f5a','#4a5a52','#587a47','z#b91c1c P#587a47'),
+'Din Djarin':fig('T','#999','#3a4a5a','#2f3a4a','#aab4c2','c#6b4a2a P#aab4c2'),
+'Darth Vader':fig('V','#fff','#15171d','#15171d','#15171d','c#111 C L#ef4444'),
+'Dewback':qd('#7a8a5a',''),
+'Pit Droid':fig('D','#c9b27a','#c9b27a','#a8925a','#c9b27a','j'),
+'Gonk Droid':sv2(`<path d='M18 62l-3 20M42 62l3 20' stroke='#333' stroke-width='5'/><rect x='12' y='24' width='36' height='42' rx='8' fill='#6b7280' ${SK}/><rect x='18' y='34' width='24' height='6' rx='2' fill='#9ca3af'/><circle cx='30' cy='50' r='5' fill='#222'/><rect x='20' y='28' width='20' height='4' fill='#facc15'/>`),
+'Moisture Farmer':fig('H',TN,'#d8cfae','#a8905a','#6b4a2a'),
+'Cantina Patron':fig('A','#b58ad8','#6b3a5a','#3a2a3a','#b58ad8','e'),
+'Super Battle Droid':fig('S','#6b7280','#6b7280','#4b5563','#6b7280','E#ef4444'),
+'Geonosian Drone':fig('A','#a58f6a','#8a7550','#6b5a3a','#a58f6a','o'),
+'Scout Trooper':fig('S','#e5e0d4','#d8d2c4','#8b8470','#ece8dc','P#8b8470'),
+'Porg':fig('U','#e8dcc0','#3a3a3a','#3a3a3a','#4a4a4a','n j'),
+'Bith Musician':fig('A','#e0b890','#8a3a3a','#3a2a2a','#e0b890','e'),
+'Sullustan Mechanic':fig('A','#b9a58a','#4a6a8a','#2a3a4a','#b9a58a','e j'),
+'Imperial Officer':fig('H',LS,'#7d8590','#3a3f48','#3a2a1a','P#555'),
+'Rebel Pilot':fig('T',LS,'#e07a1a','#c2600a','#e9e4d8')
+});
+const P=[{n:'Starter Pack',e:'🎁',c:'#fbbf24',cost:0,free:1,w:[72,24,3.6,.4,0,0,0,0]},
+{n:'Scrap Crate',e:'📦',c:'#9aa4b2',cost:12,w:[66,28,5.5,.45,.05,0,0,0]},
+{n:'Rebel Cache',e:'🚀',c:'#38bdf8',cost:50,w:[44,35,15,5,.85,.08,0,0]},
+{n:'Imperial Crate',e:'⚙️',c:'#ef4444',cost:220,w:[24,32,26,13,4.8,.75,.08,0]},
+{n:'Jedi Holocron',e:'🔷',c:'#4ade80',cost:750,w:[8,19,31,28,11.5,2.4,.55,.04]},
+{n:'Sith Vault',e:'🔺',c:'#dc2626',cost:2600,w:[1,6,21,33,26,10.2,2.5,.25]},
+{n:'Kyber Core',e:'🔮',c:'#c084fc',cost:9000,w:[0,1,7,22,38,21,9.5,1.5]}];
+const MULTI_COST=[2,3,5,8,12,16,22,30,40];
+const def=()=>({coins:100,gems:0,inv:{},luckLv:0,coinLv:0,multiLv:0,bonus:0,claimed:[],opened:0,sel:1});
+let S=def();try{const t=localStorage.getItem('gcr1');if(t){const o=JSON.parse(t);if(!o.v&&o.inv)delete o.inv[59];S={...def(),...o,v:2}}}catch(e){}
+const $=s=>document.querySelector(s);
+let ACC=null,svT;const flush=()=>{if(ACC)kv.put('accounts/'+ACC+'/s',JSON.stringify(S)).catch(()=>{})};
+const save=()=>{if(!ACC)return;clearTimeout(svT);svT=setTimeout(flush,500)};addEventListener('pagehide',flush);
+const fmt=n=>n>=1e6?(n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M':n>=1e4?(n/1e3).toFixed(1).replace(/\.0$/,'')+'K':Math.floor(n).toLocaleString();
+const luckM=()=>1+.01*S.luckLv+S.bonus, coinM=()=>1+.03*S.coinLv, maxM=()=>1+S.multiLv;
+const val=(c,sh)=>Math.round(R[c.r].v*(sh?2:1)*coinM());
+const tot=id=>{const a=S.inv[id];return a?a.n+a.s:0};
+let tab='packs';
+function hud(){const u=$('#hu');if(u)u.textContent='👤 '+(S.name||'Guest')+' · Log out';$('#hc').textContent='🪙 '+fmt(S.coins);$('#hg').textContent='💎 '+S.gems;$('#hl').textContent='🍀 Luck ×'+luckM().toFixed(2);$('#hs').textContent='🃏 '+CARDS.filter(c=>tot(c.id)>0).length+'/'+CARDS.length}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),1800)}
+function cardH(c,sh,gem,extra=''){const k=R[c.r];return `<div class="card r${c.r}${sh?' sh':''}" style="--c:${k.c};--h:${c.h}">${sh?'<span class="tag">✦ SHINY</span>':''}${gem?'<span class="gem">💎</span>':''}<div class="ic">${ART[c.n]?`<span class="art">${ART[c.n]}</span>`:c.e}</div><div><div class="nm">${c.n}</div><div class="rt">${k.n}</div><div class="vl">🪙 ${fmt(val(c,sh))}</div></div>${extra}</div>`}
+function odds(p){const w=p.w.map((x,i)=>i>=2?x*luckM():x),s=w.reduce((a,b)=>a+b,0);return w.map((x,i)=>x>0?`<div style="color:${R[i].c}">${R[i].n}: ${(x/s*100).toFixed(x/s<.01?2:1)}%</div>`:'').join('')}
+function render(){hud();const m=$('#main');
+document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+if(tab==='packs'){let h='<div class="multi">';for(let i=1;i<=10;i++)h+=`<button class="${i===S.sel?'on':''}${i>maxM()?' lock':''}" onclick="setSel(${i})">${i>maxM()?'🔒':i}</button>`;
+h+='</div><div class="hint">Open up to '+maxM()+' pack'+(maxM()>1?'s':'')+' at once · Unlock more in the Gem Shop · ✦ Shiny = 2× value · 💎 drops from Rare–Legendary cards</div><div class="packs">';
+P.forEach((p,i)=>{const n=p.free?1:Math.min(S.sel,maxM());h+=`<div class="pack" style="--pc:${p.c}"><div class="em">${p.e}</div><h3>${p.n}</h3><div>${p.free?'🆓 FREE · 1 every 10s':'🪙 '+fmt(p.cost)+' each'}</div><details><summary>View odds</summary>${odds(p)}</details><button class="btn" ${p.free?'id="fb"':''} ${S.coins<p.cost*n?'disabled':''} onclick="openPack(${i})">${p.free?'Claim free pack':'Open ×'+n+' · 🪙 '+fmt(p.cost*n)}</button></div>`});
+m.innerHTML=h+'</div>'}
+else if(tab==='coll'){let h='<div class="hint">Complete a whole rarity set to choose a reward: 🍀 more luck or 🪙 coins!</div>';
+for(let r=0;r<8;r++){const cs=CARDS.filter(c=>c.r===r),o=cs.filter(c=>tot(c.id)>0).length;
+h+=`<div class="sec"><h3 style="color:${R[r].c}">${R[r].n} <small>${o}/${cs.length}${S.claimed.includes(r)?' ✅ reward claimed':''}</small></h3><div class="row">`;
+cs.forEach(c=>{const a=S.inv[c.id];if(!a||a.n+a.s<1){h+=`<div class="card lockd" style="--c:${R[r].c};--h:${c.h}"><div class="ic">❓</div><div><div class="nm">???</div><div class="rt">${R[r].n}</div></div></div>`;return}
+const sh=a.s>0&&a.n===0;h+=`<div class="cwrap">${cardH(c,a.s>0,0,`<span class="cnt">×${a.n+a.s}</span>`)}<div class="row" style="gap:4px"><button class="btn alt" onclick="sell(${c.id})">Sell 1</button>${a.n+a.s>1?`<button class="btn" onclick="sellDup(${c.id})">Sell dupes</button>`:''}</div></div>`});
+h+='</div></div>'}
+h+='<div style="text-align:center"><button class="btn" onclick="sellAllDup()">💰 Sell ALL duplicates</button></div>';m.innerHTML=h}
+else if(tab==='board')boardRender(m);else if(tab==='trade')tradeRender(m);else{const U=[{k:'luckLv',t:'🍀 Luck Boost',d:'+1% luck per level (rare+ odds)',max:10,cost:l=>3+l*3},
+{k:'coinLv',t:'🪙 Coin Boost',d:'+3% sell value per level',max:10,cost:l=>3+l*3},
+{k:'multiLv',t:'📦 Multi-Open',d:'+1 pack per open (max 10)',max:9,cost:l=>MULTI_COST[l]}];
+let h='<div class="shop">';U.forEach(u=>{const l=S[u.k],mx=l>=u.max;h+=`<div class="up"><div><b>${u.t}</b> — Lv ${l}/${u.max}<div style="font-size:12px;opacity:.75">${u.d}</div><div class="bar"><i style="width:${l/u.max*100}%"></i></div></div><button class="btn" ${mx||S.gems<u.cost(l)?'disabled':''} onclick="buy('${u.k}')">${mx?'MAX':'💎 '+u.cost(l)}</button></div>`});
+m.innerHTML=h+'<div style="text-align:center"><button class="btn alt" onclick="resetAll()">Reset progress</button></div></div>'}}
+function setSel(i){if(i>maxM())return toast('Unlock more in the Gem Shop 💎');S.sel=i;save();render()}
+function buy(k){const u={luckLv:l=>3+l*3,coinLv:l=>3+l*3,multiLv:l=>MULTI_COST[l]}[k],c=u(S[k]);if(S.gems<c)return;S.gems-=c;S[k]++;save();render();toast('Upgrade purchased!')}
+function resetAll(){if(confirm('Reset all progress?')){const nm=S.name;S=def();S.name=nm;lastP=-1;save();render()}}
+function pick(w){let s=w.reduce((a,b)=>a+b,0)*Math.random();for(let i=0;i<w.length;i++){s-=w[i];if(s<0)return i}return 0}
+const freeLeft=()=>Math.max(0,Math.ceil(((S.lastFree||0)+10000-Date.now())/1000));
+function openPack(pi){const p=P[pi],n=p.free?1:Math.min(S.sel,maxM());if(p.free){const t=S.admin?0:freeLeft();if(t>0)return toast('Free pack ready in '+t+'s');S.lastFree=Date.now()}if(S.coins<p.cost*n)return toast('Not enough coins!');
+S.coins-=p.cost*n;const w=p.w.map((x,i)=>i>=2?x*luckM():x),res=[];
+for(let i=0;i<n;i++){const r=(S.admin&&S.force>=0)?S.force:pick(w),pool=CARDS.filter(c=>c.r===r),c=pool[Math.floor(Math.random()*pool.length)];
+const sh=Math.random()<.05,gem=r>=2&&r<=4&&Math.random()<.12,dup=tot(c.id)>0;
+const a=S.inv[c.id]||(S.inv[c.id]={n:0,s:0});sh?a.s++:a.n++;if(gem)S.gems++;res.push({c,sh,gem,dup})}
+S.opened+=n;save();hud();play(res)}
+function play(res){const best=res.reduce((a,b)=>b.c.r>a.c.r?b:a);warp=40;const ov=$('#ov');ov.classList.add('show');ov.scrollTop=0;
+const done=()=>grid(res);
+if(best.c.r>=4){ov.innerHTML='';setTimeout(()=>cine(best,done),600)}else{ov.innerHTML='';setTimeout(done,700)}}
+const TITLES=['','','','','Legendary Pull!','GODLY!!','Divine Ascension','⚠ SECRET FOUND ⚠'];
+function cine(x,next){const k=R[x.c.r],ov=$('#ov');
+ov.innerHTML=`<div class="cine" style="--c:${k.c}"><div class="ring"></div><div class="ring b"></div><div class="banner">${TITLES[x.c.r]}</div>${cardH(x.c,x.sh,x.gem)}<button class="btn" onclick="this.disabled=true;window.nx()">Continue ➜</button></div>`;
+window.nx=()=>{window.nx=()=>{};next()};
+const big=x.c.r>=5;if(big){document.body.classList.add('shake');setTimeout(()=>document.body.classList.remove('shake'),2200);
+const f=document.createElement('div');f.className='flash';document.body.appendChild(f);setTimeout(()=>f.remove(),1100)}
+const cols=x.c.r===7?['#f0f','#0ff','#ff0','#0f0','#f55']:[k.c,'#fff'];
+[900,1500,2200].slice(0,x.c.r>=6?3:big?2:1).forEach(t=>setTimeout(()=>burst(innerWidth/2,innerHeight/2,x.c.r>=6?220:130,cols),t));
+if(x.c.r>=6)burstLoop=setInterval(()=>burst(Math.random()*innerWidth,Math.random()*innerHeight*.7,50,cols),450);}
+let burstLoop;
+function grid(res){clearInterval(burstLoop);const dupV=res.filter(x=>x.dup).reduce((a,x)=>a+val(x.c,x.sh),0),gems=res.filter(x=>x.gem).length;
+$('#ov').innerHTML=`<h2 style="color:var(--y);letter-spacing:.2em;margin:10px">YOUR PULLS</h2>${gems?`<div>💎 +${gems} gem${gems>1?'s':''}!</div>`:''}<div class="grid">${res.map((x,i)=>cardH(x.c,x.sh,x.gem).replace('class="card','style_="" class="card').replace('style="--c','style="animation-delay:'+i*.15+'s;--c')).join('')}</div>
+<div class="row" style="justify-content:center"><button class="btn" onclick="closeOv()">Keep all</button>${dupV?`<button class="btn alt" id="sd">Sell duplicates (+🪙 ${fmt(dupV)})</button>`:''}</div>`;
+window.lastRes=res;const sd=$('#sd');if(sd)sd.onclick=()=>{res.filter(x=>x.dup).forEach(x=>rem(x.c.id,x.sh));S.coins+=dupV;save();closeOv();toast('Sold for 🪙 '+fmt(dupV))};
+res.forEach(x=>{if(x.c.r>=4)burst(innerWidth/2,innerHeight/3,40,[R[x.c.r].c])})}
+function closeOv(){$('#ov').classList.remove('show');upBoard();render();checkDone()}
+function rem(id,sh){const a=S.inv[id];if(!a)return;if(sh&&a.s>0)a.s--;else if(a.n>0)a.n--;else if(a.s>0)a.s--}
+function sell(id){const a=S.inv[id],c=CARDS[id];if(!a||a.n+a.s<1)return;const sh=a.n===0;S.coins+=val(c,sh);rem(id,sh);save();render()}
+function sellDup(id){const a=S.inv[id],c=CARDS[id];let g=0;while(a.n+a.s>1){const sh=a.n===0;g+=val(c,sh);rem(id,sh)}S.coins+=g;save();render();toast('+🪙 '+fmt(g))}
+function sellAllDup(){let g=0;CARDS.forEach(c=>{const a=S.inv[c.id];if(!a)return;while(a.n+a.s>1){const sh=a.n===0;g+=val(c,sh);rem(c.id,sh)}});S.coins+=g;save();render();toast(g?'+🪙 '+fmt(g):'No duplicates')}
+function checkDone(){for(let r=0;r<8;r++){if(S.claimed.includes(r))continue;if(CARDS.filter(c=>c.r===r).every(c=>tot(c.id)>0)){
+const coins=R[r].v*50;$('#modal').innerHTML=`<div class="mbox"><h2 style="color:${R[r].c};margin-top:0">${R[r].n} Set Complete!</h2><p>You collected every ${R[r].n} card. Choose your reward:</p><div class="row"><button class="btn" onclick="claim(${r},1)">🍀 +10% Luck</button><button class="btn" onclick="claim(${r},0)">🪙 +${fmt(coins)} Coins</button></div></div>`;$('#modal').classList.add('show');burst(innerWidth/2,innerHeight/2,150,[R[r].c,'#fff']);return}}}
+function claim(r,l){S.claimed.push(r);l?S.bonus+=.1:S.coins+=R[r].v*50;save();$('#modal').classList.remove('show');render();toast(l?'Luck increased!':'Coins added!');setTimeout(checkDone,300)}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
+/* Accounts, Leaderboard, Trading */
+const FB_URL='https://galacticcardrush2-default-rtdb.firebaseio.com';/* paste your Firebase Realtime Database URL between the quotes to make accounts, scores and trades shared online */
+const NPC=[['Jawa Trader',120],['Rebel Recruit',600],['Han Solo',5000],['Lando Calrissian',20000],['Boba Fett',80000],['Jabba the Hutt',250000],['Darth Vader',600000],['Emperor Palpatine',1000000]];
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const root=()=>{try{return JSON.parse(localStorage.getItem('gcr_root'))||{}}catch(e){return{}}};
+const kv={async get(p){if(FB_URL){const r=await fetch(`${FB_URL}/${p}.json`);return await r.json()}return p.split('/').reduce((o,k)=>o&&o[k],root())??null},
+async put(p,v){if(FB_URL){await fetch(`${FB_URL}/${p}.json`,{method:'PUT',body:JSON.stringify(v)});return}const r=root(),ks=p.split('/');let o=r;ks.slice(0,-1).forEach(k=>{o=o[k]=(o[k]&&typeof o[k]=='object')?o[k]:{}});o[ks[ks.length-1]]=v;try{localStorage.setItem('gcr_root',JSON.stringify(r))}catch(e){}}};
+const clm=new Set(),busy={v:0};let boardD=null,trD=null,lastF=0,lastT=0,lastP=-1,trSig='',incL=[],outL=[];
+const akey=n=>n.toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,14),cleanN=v=>v.replace(/[^A-Za-z0-9 _-]/g,'').trim().slice(0,14);
+const ph=(k,pw)=>String(h53('pw|'+k+'|'+pw)),lmsg=t=>{const e=$('#lm');if(e)e.textContent=t};
+function loginUI(msg=''){const l=$('#login');l.innerHTML=`<div class='mbox'><h2 style='margin-top:0;color:var(--y);letter-spacing:.1em'>GALACTIC CARD RUSH</h2><p style='margin:6px 0'>Log in or create an account to save your cards, climb the leaderboard and trade.</p><input type='text' id='lu' placeholder='Username' maxlength='14' autocomplete='username'><input type='password' id='lp' placeholder='Password' autocomplete='current-password'><div class='row'><button class='btn' onclick='doLogin()'>Log in</button><button class='btn alt' onclick='doCreate()'>Create account</button></div><div id='lm' style='margin-top:10px;color:#fda4af;min-height:18px'>${msg}</div><div style='font-size:11px;opacity:.6;margin-top:8px'>Don't reuse a real password from another site.</div></div>`;l.classList.add('show');const i=$('#lp');if(i)i.onkeydown=e=>{if(e.key==='Enter')doLogin()}}
+async function doLogin(){const k=akey($('#lu').value),pw=$('#lp').value;if(!k||!pw)return lmsg('Enter your username and password');lmsg('Checking…');try{const a=await kv.get('accounts/'+k);if(!a||a.h!==ph(k,pw))return lmsg('Wrong username or password');await startSession(k,a)}catch(e){lmsg('Connection problem, try again')}}
+async function doCreate(){const n=cleanN($('#lu').value),k=akey(n),pw=$('#lp').value;if(k.length<3)return lmsg('Username needs at least 3 letters or numbers');if(pw.length<4)return lmsg('Password needs at least 4 characters');lmsg('Creating…');try{if(await kv.get('accounts/'+k))return lmsg('That username is taken');let s=def();try{const lg=localStorage.getItem('gcr1');if(lg){s={...def(),...JSON.parse(lg)};localStorage.removeItem('gcr1')}}catch(e){}s.name=n;const a={n,h:ph(k,pw),s:JSON.stringify(s)};await kv.put('accounts/'+k,a);await startSession(k,a)}catch(e){lmsg('Connection problem, try again')}}
+async function startSession(k,a){ACC=k;let s={};try{s=JSON.parse(a.s||'{}')}catch(e){}S={...def(),...s,name:a.n};lastP=-1;boardD=null;trD=null;trSig='';lastF=0;lastT=0;try{localStorage.setItem('gcr_sess',JSON.stringify({k,h:a.h}))}catch(e){}$('#login').classList.remove('show');tab='packs';render();upBoard();loadTrades()}
+function logout(){flush();ACC=null;try{localStorage.removeItem('gcr_sess')}catch(e){}S=def();render();loginUI()}
+async function autoLogin(){try{const t=JSON.parse(localStorage.getItem('gcr_sess')||'null');if(t){const a=await kv.get('accounts/'+t.k);if(a&&a.h===t.h)return startSession(t.k,a)}}catch(e){}loginUI()}
+function myScore(){let t=0;CARDS.forEach(c=>{const a=S.inv[c.id];if(a&&a.n+a.s>0)t+=R[c.r].v*(a.s>0?2:1)});return t}
+async function upBoard(){if(!ACC)return;const sc=myScore();if(sc===lastP)return;lastP=sc;try{await kv.put('board/'+ACC,{n:S.name,s:sc,c:CARDS.filter(c=>tot(c.id)>0).length})}catch(e){lastP=-1}}
+async function loadBoard(){lastF=Date.now();try{const d=await kv.get('board');boardD=d?Object.entries(d).filter(([k,x])=>x&&typeof x==='object').map(([k,x])=>({k,n:String(x.n||k).slice(0,14),s:+x.s||0})):[]}catch(e){boardD=boardD||[]}if(tab==='board')render()}
+function boardRender(m){upBoard();if(Date.now()-lastF>4000)loadBoard();
+const rows=[...(boardD||[]).filter(x=>x.k!==ACC),...(ACC?[{k:ACC,n:S.name,s:myScore(),me:1}]:[]),...NPC.map(x=>({n:x[0],s:x[1],npc:1}))].sort((a,b)=>b.s-a.s);
+m.innerHTML=`<div class='shop'><div class='up' style='display:block'><h3 style='margin:0 0 8px;color:var(--y)'>🏆 Top Collectors</h3>${rows.slice(0,25).map((r,i)=>`<div class='lb${r.me?' me':''}'><span>${['🥇','🥈','🥉'][i]||'#'+(i+1)}</span><span>${esc(r.n)} ${r.npc?'<small>🤖 rival</small>':r.me?'<small>(you)</small>':''}</span><span>🪙 ${fmt(r.s)}</span></div>`).join('')}</div><div class='hint'>Score = total value of every card you've collected (shiny = 2×). ${FB_URL?'Scores are shared with every player online!':'Scores are saved on this device only.'}</div></div>`}
+async function claimTrades(){let ch=0;for(const t of (trD||[])){if(t.f!==ACC||t.st==='open'||t.cl||clm.has(t.id))continue;clm.add(t.id);try{await kv.put('trades/'+t.id+'/cl',1)}catch(e){clm.delete(t.id);continue}t.cl=1;const done=t.st==='done',id=done?t.w:t.g,sh=done?t.ws:t.gs;if(!CARDS[id])continue;const a=S.inv[id]||(S.inv[id]={n:0,s:0});sh?a.s++:a.n++;ch++}if(ch){save();hud();lastP=-1;upBoard();toast('Trade results collected!')}}
+async function loadTrades(){lastT=Date.now();if(!ACC)return;try{const d=await kv.get('trades');trD=d?Object.entries(d).filter(([id,t])=>t&&typeof t==='object').map(([id,t])=>({id,...t})):[];await claimTrades()}catch(e){trD=trD||[]}const sig=JSON.stringify(trD);if(tab==='trade'&&sig!==trSig){trSig=sig;render()}}
+async function sendTrade(){if(busy.v)return;busy.v=1;try{await snd2()}finally{busy.v=0}}
+async function snd2(){const tk=akey($('#tu').value),gv=($('#tg').value||'').split('-'),gid=+gv[0],gs=+gv[1]?1:0,wid=+$('#tw').value,ws=$('#ts').checked?1:0;if(!tk||tk===ACC)return toast(`Enter another player's username`);const a=S.inv[gid];if(!gv[0]||!a||(gs?a.s:a.n)<1)return toast(`You don't have that card`);
+try{const tn=await kv.get('accounts/'+tk+'/n');if(!tn)return toast('No player has that username');gs?a.s--:a.n--;const id=ACC+'_'+Date.now();await kv.put('trades/'+id,{f:ACC,fn:S.name,t:tk,tn,g:gid,gs,w:wid,ws,st:'open'});save();hud();lastP=-1;upBoard();toast('Offer sent!');loadTrades()}catch(e){toast('Connection problem, try again')}}
+async function setTrade(list,i,st){const t=list[i];if(!t)return;try{if(await kv.get('trades/'+t.id+'/st')!=='open')return toast('That offer is no longer open');await kv.put('trades/'+t.id+'/st',st);toast(st==='cancelled'?'Offer cancelled':'Offer declined');loadTrades()}catch(e){toast('Connection problem, try again')}}
+async function acceptTrade(i){if(busy.v)return;busy.v=1;try{await acc2(i)}finally{busy.v=0}}
+async function acc2(i){const t=incL[i];if(!t||t.t!==ACC||!CARDS[t.w]||!CARDS[t.g])return;const a=S.inv[t.w];if(!a||(t.ws?a.s:a.n)<1)return toast(`You don't have that card`);
+try{if(await kv.get('trades/'+t.id+'/st')!=='open')return toast('That offer is no longer open');t.ws?a.s--:a.n--;const b=S.inv[t.g]||(S.inv[t.g]={n:0,s:0});t.gs?b.s++:b.n++;await kv.put('trades/'+t.id+'/st','done');save();hud();lastP=-1;upBoard();toast('Trade complete! 🎉');loadTrades()}catch(e){toast('Connection problem, try again')}}
+function tradeRender(m){if(!ACC)return;if(Date.now()-lastT>4000)loadTrades();
+const old={u:$('#tu')?$('#tu').value:'',g:$('#tg')?$('#tg').value:'',w:$('#tw')?$('#tw').value:'',s:$('#ts')?$('#ts').checked:false};
+const mine=[];CARDS.forEach(c=>{const a=S.inv[c.id];if(!a)return;if(a.n>0)mine.push(`<option value='${c.id}-0'>${R[c.r].n} · ${esc(c.n)} ×${a.n}</option>`);if(a.s>0)mine.push(`<option value='${c.id}-1'>✦ ${R[c.r].n} · ${esc(c.n)} ×${a.s}</option>`)});
+const all=CARDS.map(c=>`<option value='${c.id}'>${R[c.r].n} · ${esc(c.n)}</option>`).join('');
+const L=(t,s)=>(s?'✦ ':'')+esc(CARDS[t]?CARDS[t].n:'?'),T=trD||[];incL=T.filter(t=>t.t===ACC&&t.st==='open');outL=T.filter(t=>t.f===ACC&&t.st==='open');
+const inp=`padding:8px;border-radius:8px;border:1px solid var(--line);background:#0a0e24;color:var(--tx);font:inherit;max-width:100%;width:100%`,hh=`margin:0 0 8px;color:var(--y)`;
+m.innerHTML=`<div class='shop'><div class='up' style='display:block'><h3 style='${hh}'>🔁 Send a trade offer</h3><div style='display:flex;flex-direction:column;gap:8px'><input type='text' id='tu' maxlength='14' placeholder="Player's username" style='${inp}'><label>You give:<br><select id='tg' style='${inp}'>${mine.join('')||'<option value="">(you have no cards yet)</option>'}</select></label><label>You want:<br><select id='tw' style='${inp}'>${all}</select></label><label><input type='checkbox' id='ts'> I want the shiny ✦ version</label><button class='btn' onclick='sendTrade()'>Send offer</button></div></div>
+<div class='up' style='display:block'><h3 style='${hh}'>📥 Offers to you (${incL.length})</h3>${incL.map((t,i)=>`<div class='lb' style='grid-template-columns:1fr auto'><span>${esc(String(t.fn).slice(0,14))} gives <b>${L(t.g,t.gs)}</b> for your <b>${L(t.w,t.ws)}</b></span><span style='display:flex;gap:4px'><button class='btn' onclick='acceptTrade(${i})'>Accept</button><button class='btn alt' onclick='setTrade(incL,${i},"declined")'>Decline</button></span></div>`).join('')||'<div class="hint">No offers right now</div>'}</div>
+<div class='up' style='display:block'><h3 style='${hh}'>📤 Your open offers (${outL.length})</h3>${outL.map((t,i)=>`<div class='lb' style='grid-template-columns:1fr auto'><span>To ${esc(String(t.tn).slice(0,14))}: you give <b>${L(t.g,t.gs)}</b> for <b>${L(t.w,t.ws)}</b></span><button class='btn alt' onclick='setTrade(outL,${i},"cancelled")'>Cancel</button></div>`).join('')||'<div class="hint">No open offers</div>'}</div>
+<div class='hint'>The card you offer is held safely until the other player answers. If they decline or you cancel, it comes back to you. ${FB_URL?'Trade with any player online!':'Trading only works between accounts on this device until the online database is connected.'}</div></div>`;
+if($('#tu')){$('#tu').value=old.u;if(old.g)$('#tg').value=old.g;if(old.w)$('#tw').value=old.w;$('#ts').checked=old.s}}
+setInterval(()=>{if(ACC&&tab==='trade')loadTrades()},8000);
+/* Admin */
+function admOpen(){const m=$('#modal');if(S.admin)return admPanel();m.innerHTML=`<div class="mbox"><h3 style="margin-top:0">🔒 Enter code</h3><input type="text" id="ac" autocomplete="off" placeholder="secret code"><div class="row"><button class="btn" onclick="admCheck()">Unlock</button><button class="btn alt" onclick="admClose()">Cancel</button></div></div>`;m.classList.add('show');setTimeout(()=>{const i=$('#ac');if(i){i.focus();i.onkeydown=e=>{if(e.key==='Enter')admCheck()}}},50)}
+const h53=s=>{let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0,c;i<s.length;i++){c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)};
+function admCheck(){if(h53('gcr|'+($('#ac').value||'').trim().toLowerCase())===679787156692563){S.admin=true;save();toast('Admin unlocked 👑');admPanel()}else toast('Wrong code')}
+function admClose(){$('#modal').classList.remove('show');render()}
+function admPanel(){const opts=CARDS.map(c=>`<option value="${c.id}">${R[c.r].n} · ${c.n}</option>`).join(''),ro=R.map((r,i)=>`<option value="${i}">${r.n}</option>`).join('');
+$('#modal').innerHTML=`<div class="mbox" style="max-height:90vh;overflow:auto"><h3 style="margin-top:0">👑 Admin Panel</h3>
+<h4>Resources</h4><div class="row"><button class="btn" onclick="adm('coins')">+1M 🪙</button><button class="btn" onclick="adm('gems')">+1000 💎</button><button class="btn" onclick="adm('max')">Max upgrades</button></div>
+<h4>Cards</h4><div class="row"><select id="ag">${opts}</select><label><input type="checkbox" id="as"> shiny</label><button class="btn" onclick="adm('give')">Give card</button></div><div class="row"><button class="btn" onclick="adm('all')">Unlock all cards</button><button class="btn alt" onclick="adm('clear')">Clear collection</button></div>
+<h4>Rigged pulls</h4><div class="row"><select id="af"><option value="-1">Normal odds</option>${ro}</select><button class="btn" onclick="adm('force')">Set guaranteed rarity</button></div><div style="font-size:12px;opacity:.7">Also removes the free-pack cooldown.</div>
+<div class="row"><button class="btn" onclick="admClose()">Close</button><button class="btn alt" onclick="adm('off')">Lock admin</button></div></div>`;$('#modal').classList.add('show');const f=$('#af');if(f)f.value=S.force>=0?S.force:-1}
+function adm(k){if(!S.admin)return;
+if(k==='coins')S.coins+=1e6;else if(k==='gems')S.gems+=1000;else if(k==='max'){S.luckLv=10;S.coinLv=10;S.multiLv=9}
+else if(k==='give'){const id=+$('#ag').value,a=S.inv[id]||(S.inv[id]={n:0,s:0});$('#as').checked?a.s++:a.n++}
+else if(k==='all')CARDS.forEach(c=>{if(!tot(c.id))S.inv[c.id]={n:1,s:0}});
+else if(k==='clear'){if(!confirm('Clear all cards?'))return;S.inv={};S.claimed=[]}
+else if(k==='force'){S.force=+$('#af').value}
+else if(k==='off'){S.admin=false;S.force=-1;save();admClose();return toast('Admin locked')}
+save();hud();toast('Done ✅');if(k==='all'){admClose();checkDone()}}
+/* Starfield + particles */
+const bg=$('#bg'),g=bg.getContext('2d'),fx=$('#fx'),f=fx.getContext('2d');let W,H,warp=1;const stars=[],parts=[];
+function rs(){W=bg.width=fx.width=innerWidth;H=bg.height=fx.height=innerHeight}rs();addEventListener('resize',rs);
+for(let i=0;i<420;i++)stars.push({x:(Math.random()*2-1)*W,y:(Math.random()*2-1)*H,z:Math.random()*W,t:Math.random()*360});
+function burst(x,y,n,cols){for(let i=0;i<n;i++){const a=Math.random()*6.283,s=2+Math.random()*9;parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:1,c:cols[i%cols.length],s:2+Math.random()*3})}}
+function loop(){g.fillStyle='rgba(4,6,15,.35)';g.fillRect(0,0,W,H);const sp=1.2*warp;
+stars.forEach(s=>{const pz=s.z;s.z-=sp;if(s.z<1){s.x=(Math.random()*2-1)*W;s.y=(Math.random()*2-1)*H;s.z=W;return}
+const k=W/2/s.z,px=W/2+s.x*k,py=H/2+s.y*k,qk=W/2/(pz+sp*.5),qx=W/2+s.x*qk,qy=H/2+s.y*qk,a=1-s.z/W;
+g.strokeStyle=`hsla(${s.t>300?200:s.t>200?40:0},${s.t>200?60:0}%,90%,${a})`;g.lineWidth=a*2.2+.3;g.beginPath();g.moveTo(qx,qy);g.lineTo(px,py);g.stroke()});
+warp+=(1-warp)*.04;
+f.clearRect(0,0,W,H);for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.12;p.vx*=.985;p.l-=.012;if(p.l<=0){parts.splice(i,1);continue}f.globalAlpha=p.l;f.fillStyle=p.c;f.shadowColor=p.c;f.shadowBlur=10;f.beginPath();f.arc(p.x,p.y,p.s,0,6.283);f.fill()}f.globalAlpha=1;f.shadowBlur=0;
+requestAnimationFrame(loop)}
+loop();render();
+loginUI('Signing in…');autoLogin();
+setInterval(()=>{const b=document.getElementById('fb');if(!b)return;const t=S.admin?0:freeLeft();b.disabled=t>0;b.textContent=t>0?'Ready in '+t+'s':'Claim free pack'},250);
+
+</script></body></html>
